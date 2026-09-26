@@ -1,14 +1,16 @@
 <img src="https://cdn.navid.media/connectors/facebook-icon.png" alt="Facebook" width="88">
 
-# Facebook MCP
+# Facebook MCP Server & CLI
 
-[![npm](https://img.shields.io/npm/v/@thenavidm/facebook-mcp?color=orange&label=npm)](https://www.npmjs.com/package/@thenavidm/facebook-mcp)
+[![npm](https://img.shields.io/npm/v/@thenavidm/facebook-mcp-cli?color=orange&label=npm)](https://www.npmjs.com/package/@thenavidm/facebook-mcp-cli)
 [![License](https://img.shields.io/badge/License-MIT-blue)](./LICENSE)
 [![YouTube](https://img.shields.io/badge/YouTube-@thenavidm-red?logo=youtube&logoColor=white)](https://youtube.com/@thenavidm?sub_confirmation=1)
 [![X](https://img.shields.io/badge/X-@thenavidm-black?logo=x)](https://x.com/thenavidm)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-thenavidm-0A66C2?logo=linkedin&logoColor=white)](https://linkedin.com/in/thenavidm)
 
-Facebook MCP server for Claude Code and AI agents. Posting, scheduling, drafts, Page and post insights, and comment moderation.
+Facebook MCP server and CLI for Claude Code, Codex and AI agents. 15 tools for posting, scheduling, drafts, Page and post insights, and comment moderation through Meta's official Graph API.
+
+One install gives you both surfaces, the same 15 tools under the same names, from the same server, so they cannot drift apart.
 
 Setup needs a Meta developer app. There is no way around that: Facebook only issues Page tokens through an app you own. You create one once, generate a user token, and `login` exchanges it for Page tokens that never expire.
 
@@ -19,6 +21,39 @@ Scheduling is real. Facebook holds the post and publishes it itself, so nothing 
 15 tools, across as many Pages as you administer.
 
 <img src="https://cdn.navid.media/repos/facebook-mcp.gif?v=1" alt="Claude Code using the Facebook MCP server" width="520">
+
+## Two ways to use it
+
+### Command line
+
+`facebook-cli` runs every tool as a command. Agents that run commands, like
+Claude Code, Codex and OpenCode, use it on their own, and you can type the same
+commands in a terminal, a script or a cron job:
+
+```bash
+facebook-cli                                          # every command, one line each
+facebook-cli list-pages                               # the Pages login stored
+facebook-cli get-page --json
+facebook-cli list-posts --agent
+facebook-cli <command> --help                         # what any command takes
+```
+
+`--confirm` is the shell spelling of the confirmation deleting needs. `--json` gives JSON, `--compact` puts it on one line, `--select` keeps only the fields you name, and `--agent` turns on all of it for a script. Exit codes are 0 ok, 2 usage or a refused write, 3 not found, 4 a token Meta refuses, 5 API, 7 rate limited and 10 no Page connected, so a script branches on the number.
+
+`facebook-cli schema <command>` prints the exact JSON Schema an MCP client
+receives for that tool.
+
+### MCP server, for AI agents
+
+`facebook-mcp` is what Claude Code, Claude Desktop, Cursor and the rest launch.
+You never run it by hand:
+
+```bash
+claude mcp add facebook -- npx -y @thenavidm/facebook-mcp-cli
+```
+
+In Claude Desktop, the [`.mcpb` extension](https://github.com/thenavidm/facebook-mcp-cli/releases/latest)
+installs on a double click. Section 4 has every other client.
 
 ## Contents
 
@@ -73,13 +108,20 @@ one environment variable, deliberately.
 ## 2. Quick install ⚡
 
 ```bash
-npx -y @thenavidm/facebook-mcp --version
+npx -y @thenavidm/facebook-mcp-cli --version
 ```
 
 Node 20 or newer. Nothing else to install.
 
 That gets you the server. Connecting a Page is the next three sections, and it
 is the part that takes real time.
+
+For the CLI as a command you or your agent can run anywhere, install it once:
+
+```bash
+npm install -g @thenavidm/facebook-mcp-cli
+facebook-cli
+```
 
 ## 3. Create your Meta app 🔑
 
@@ -221,7 +263,7 @@ That token dies in about an hour. It does not matter, it is used once.
 ### Exchange it for Page tokens
 
 ```bash
-npx @thenavidm/facebook-mcp login <that token>
+npx @thenavidm/facebook-mcp-cli login <that token>
 ```
 
 Writes `~/.facebook-mcp/pages.json`, mode 600, one token per Page you
@@ -235,7 +277,7 @@ is the single most common reason this stops working the next day.
 ```bash
 export FACEBOOK_APP_ID=...
 export FACEBOOK_APP_SECRET=...
-npx @thenavidm/facebook-mcp login <that token>
+npx @thenavidm/facebook-mcp-cli login <that token>
 ```
 
 Both are under **Settings**, then **Basic** in your app. With them, login
@@ -251,16 +293,22 @@ to use those too, add their products now rather than making three apps.
 ### Claude Code
 
 ```bash
-claude mcp add --transport stdio facebook -- npx -y @thenavidm/facebook-mcp
+claude mcp add --transport stdio facebook -- npx -y @thenavidm/facebook-mcp-cli
 ```
 
 With posting allowed:
 
 ```bash
-claude mcp add --transport stdio --env FACEBOOK_ALLOW_WRITE=true facebook -- npx -y @thenavidm/facebook-mcp
+claude mcp add --transport stdio --env FACEBOOK_ALLOW_WRITE=true facebook -- npx -y @thenavidm/facebook-mcp-cli
 ```
 
 ### Claude Desktop
+
+The short way: download the [`.mcpb` extension](https://github.com/thenavidm/facebook-mcp-cli/releases/latest)
+from the latest release and double-click it. It carries its own dependencies,
+so there is no config file to edit and nothing to install first. Run `login` from section 4 first, and the extension uses the Pages it stored.
+
+The long way, if you would rather edit the config yourself:
 
 | Platform | Path |
 |---|---|
@@ -272,7 +320,7 @@ claude mcp add --transport stdio --env FACEBOOK_ALLOW_WRITE=true facebook -- npx
   "mcpServers": {
     "facebook": {
       "command": "npx",
-      "args": ["-y", "@thenavidm/facebook-mcp"],
+      "args": ["-y", "@thenavidm/facebook-mcp-cli"],
       "env": { "FACEBOOK_ALLOW_WRITE": "true" }
     }
   }
@@ -296,7 +344,7 @@ shape as Claude Desktop.
     "facebook": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@thenavidm/facebook-mcp"]
+      "args": ["-y", "@thenavidm/facebook-mcp-cli"]
     }
   }
 }
@@ -309,7 +357,7 @@ All take the same stdio shape. Codex uses TOML:
 ```toml
 [mcp_servers.facebook]
 command = "npx"
-args = ["-y", "@thenavidm/facebook-mcp"]
+args = ["-y", "@thenavidm/facebook-mcp-cli"]
 ```
 
 ### Docker
@@ -325,7 +373,7 @@ every login is written into a container that is about to disappear.
 ## 6. Check it worked 🩺
 
 ```bash
-npx @thenavidm/facebook-mcp doctor
+npx @thenavidm/facebook-mcp-cli doctor
 ```
 
 It names every Page it can reach, with follower counts. If something is wrong
@@ -335,6 +383,9 @@ it says which link in the chain broke, because Meta's own error rarely does.
 
 Fifteen. Each declares whether it reads or writes, so your client can show you
 before anything runs.
+
+Scheduling is native: Facebook holds a scheduled post and publishes it itself,
+so nothing has to run on your machine at the time. Drafts are real drafts too.
 
 ### Your Pages
 
@@ -405,7 +456,8 @@ also post is exposed to whatever they put there.
 
 ## 9. Several Pages 📄
 
-`list_pages` shows them, and every tool takes a `page` argument to name one.
+`login` stores every Page you administer. `list_pages` shows them, and every
+tool takes a `page` argument to name one.
 
 Unnamed, it uses the first, which is rarely what you want. Set an order:
 
@@ -453,7 +505,7 @@ Full setup walkthrough: [INSTALL.md](INSTALL.md).
 ## FAQ ❓
 
 <details>
-<summary><strong>What is an MCP server?</strong></summary>
+<summary><b>What is an MCP server?</b></summary>
 
 Model Context Protocol is a standard way to give an AI assistant access to a
 tool or a data source. An MCP server exposes a set of functions, and a client
@@ -466,7 +518,21 @@ You never call the tools yourself.
 </details>
 
 <details>
-<summary><strong>Why do I have to create a Meta app? That seems like a lot.</strong></summary>
+<summary><b>What is the CLI?</b></summary>
+
+`facebook-cli` is the same program as the MCP server, run as commands. AI agents that run commands, like Claude Code, Codex and OpenCode, use it on their own, and you can type the same commands in a terminal, a script or a cron job. Every tool is a command with dashes, so `create_post` runs as `facebook-cli create-post`.
+
+</details>
+
+<details>
+<summary><b>Should I use the MCP server or the CLI?</b></summary>
+
+Use the MCP server in an app with no terminal, like Claude Desktop's chat. Use the CLI anywhere commands run: an agent like Claude Code, Codex or OpenCode, a script or a cron job. The MCP server sends its full tool list to the model on every turn, and the CLI costs nothing until it runs.
+
+</details>
+
+<details>
+<summary><b>Why do I have to create a Meta app? That seems like a lot.</b></summary>
 
 Because Facebook has no other way to issue a token. There are no app passwords
 and no personal access tokens, so every credential is minted by an app someone
@@ -478,9 +544,9 @@ reviewed, nothing is published, and nobody else sees the app.
 </details>
 
 <details>
-<summary><strong>Will this get my Page banned?</strong></summary>
+<summary><b>Will this get my Page banned?</b></summary>
 
-No. This is Meta's own API used the way Meta intends. The account risk that
+No. This is Meta's own API used the way Meta intends. Nothing is reverse engineered. The account risk that
 exists on Instagram's unofficial API, or on WhatsApp's companion protocol, does
 not apply here.
 
@@ -490,7 +556,7 @@ automated use across several Pages shares one budget.
 </details>
 
 <details>
-<summary><strong>What data does it store, and where?</strong></summary>
+<summary><b>What data does it store, and where?</b></summary>
 
 One file, `~/.facebook-mcp/pages.json`, written mode 600. It holds your Page
 ids and their tokens, nothing else.
@@ -504,7 +570,7 @@ as well.
 </details>
 
 <details>
-<summary><strong>Does it cost anything?</strong></summary>
+<summary><b>Does it cost anything?</b></summary>
 
 No. The Graph API is free for this, the Meta app is free, and there is no
 paid tier involved. You pay for whatever AI client you use, and nothing else.
@@ -512,25 +578,7 @@ paid tier involved. You pay for whatever AI client you use, and nothing else.
 </details>
 
 <details>
-<summary><strong>Why is the package name not just "facebook-mcp"?</strong></summary>
-
-npm names are first come, first served, and unscoped ones go quickly. Scoped
-packages like `@thenavidm/facebook-mcp` avoid the scramble and make it obvious
-who published it, which matters for something that holds credentials.
-
-</details>
-
-<details>
-<summary><strong>Can I use it with several Pages?</strong></summary>
-
-Yes. `login` stores every Page you administer, and each tool takes a `page`
-argument. Set `FACEBOOK_PREFERRED_PAGES` so an unnamed action lands somewhere
-predictable rather than on whichever was stored first.
-
-</details>
-
-<details>
-<summary><strong>Do I need App Review?</strong></summary>
+<summary><b>Do I need App Review?</b></summary>
 
 No, not for your own Pages. App Review and Business Verification are for
 managing Pages belonging to other people, which Meta calls Advanced Access. For
@@ -540,7 +588,7 @@ request it.
 </details>
 
 <details>
-<summary><strong>Can it post to my personal profile?</strong></summary>
+<summary><b>Can it post to my personal profile?</b></summary>
 
 No, and neither can anything else. Facebook removed profile posting from the
 API in 2018 and never brought it back. Pages are the only writable surface.
@@ -548,15 +596,7 @@ API in 2018 and never brought it back. Pages are the only writable surface.
 </details>
 
 <details>
-<summary><strong>Is this an unofficial API?</strong></summary>
-
-No. It is Meta's official Graph API, the same one their own tools use. Nothing
-is reverse engineered and your account is not at risk.
-
-</details>
-
-<details>
-<summary><strong>Do the tokens expire?</strong></summary>
+<summary><b>Do the tokens expire?</b></summary>
 
 Page tokens derived from a long-lived user token do not expire at all. Without
 your app id and secret, login can only produce short-lived ones that die in
@@ -565,15 +605,7 @@ about an hour, which is the most common reason this stops working.
 </details>
 
 <details>
-<summary><strong>Can it schedule posts?</strong></summary>
-
-Yes, natively. Facebook holds the post and publishes it itself, so nothing has
-to be running on your machine at the time. Real drafts too.
-
-</details>
-
-<details>
-<summary><strong>Will it post something without me knowing?</strong></summary>
+<summary><b>Will it post something without me knowing?</b></summary>
 
 It cannot post at all unless you set `FACEBOOK_ALLOW_WRITE=true`. With that on
 it can, so set `FACEBOOK_AUDIT_LOG` and every attempt is written to a file no
@@ -582,24 +614,16 @@ tool can edit.
 </details>
 
 <details>
-<summary><strong>Does one Meta app cover Instagram and Threads too?</strong></summary>
+<summary><b>Does one Meta app cover Instagram and Threads too?</b></summary>
 
 Yes. The same app can carry all three sets of permissions, so add those
 products now if you plan to use them rather than creating three apps.
 
 </details>
 
-<details>
-<summary><strong>Can it read comments and reply?</strong></summary>
-
-Yes, both, and it can hide comments, which is reversible and the right answer
-for spam. Deleting is possible but needs a separate switch.
-
-</details>
-
 ## Questions
 
-Run into a problem or have a question? [Open an issue](https://github.com/thenavidm/facebook-mcp/issues) and I will help.
+Run into a problem or have a question? [Open an issue](https://github.com/thenavidm/facebook-mcp-cli/issues) and I will help.
 
 ## About the author
 
@@ -607,7 +631,7 @@ Navid Moazzez is a leading AI business strategist, and the host of the AI Creato
 
 **Links**
 
-- Personal website: [navid.me](https://navid.me?utm_source=github&utm_medium=referral&utm_campaign=facebook-mcp&utm_content=readme)
+- Personal website: [navid.me](https://navid.me?utm_source=github&utm_medium=referral&utm_campaign=facebook-mcp-cli&utm_content=readme)
 - YouTube: [@thenavidm](https://youtube.com/@thenavidm?sub_confirmation=1) and [@thenavidai](https://youtube.com/@thenavidai?sub_confirmation=1)
 - X: [@thenavidm](https://x.com/thenavidm)
 - Instagram: [@thenavidm](https://instagram.com/thenavidm)
@@ -623,4 +647,4 @@ Not affiliated with, endorsed by, or connected to Meta Platforms, Inc.
 
 ---
 
-© 2026 [NM Media](https://navid.media?utm_source=github&utm_medium=referral&utm_campaign=facebook-mcp&utm_content=readme). Made with ❤️ by [Navid Moazzez](https://navid.me?utm_source=github&utm_medium=referral&utm_campaign=facebook-mcp&utm_content=readme).
+© 2026 [NM Media](https://navid.media?utm_source=github&utm_medium=referral&utm_campaign=facebook-mcp-cli&utm_content=readme). Made with ❤️ by [Navid Moazzez](https://navid.me?utm_source=github&utm_medium=referral&utm_campaign=facebook-mcp-cli&utm_content=readme).

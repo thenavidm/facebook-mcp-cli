@@ -1,0 +1,75 @@
+{
+  "manifest_version": "0.2",
+  "name": "facebook",
+  "display_name": "Facebook",
+  "version": "0.2.0",
+  "description": "Facebook MCP server and CLI for Claude Code, Codex and AI agents. 15 tools for posting, scheduling, drafts, Page and post insights, and comment moderation through Meta's official Graph API.",
+  "long_description": "Connects Claude to your Facebook Pages through Meta's official Graph API: posting, scheduling, drafts, insights and comment moderation.\n\nFacebook only issues Page tokens through a Meta app you own. Create one once and run `npx -y @thenavidm/facebook-mcp-cli login <user-token>` in a terminal, which stores a long-lived token for every Page you administer; the extension uses it from then on. Or paste a Page id and Page token here.\n\nPages only: Facebook removed personal profile posting from the API in 2018. Deleting refuses to run without an explicit confirmation, and Read only removes every write.",
+  "author": {
+    "name": "Navid Moazzez",
+    "url": "https://navid.me"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thenavidm/facebook-mcp-cli"
+  },
+  "homepage": "https://github.com/thenavidm/facebook-mcp-cli",
+  "documentation": "https://github.com/thenavidm/facebook-mcp-cli#readme",
+  "support": "https://github.com/thenavidm/facebook-mcp-cli/issues",
+  "license": "MIT",
+  "keywords": [
+    "facebook",
+    "meta",
+    "pages",
+    "social-media",
+    "mcp"
+  ],
+  "server": {
+    "type": "node",
+    "entry_point": "server/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": [
+        "${__dirname}/server/index.js"
+      ],
+      "env": {
+        "FACEBOOK_PAGE_ID": "${user_config.page_id}",
+        "FACEBOOK_PAGE_TOKEN": "${user_config.page_token}",
+        "FACEBOOK_READ_ONLY": "${user_config.read_only}"
+      }
+    }
+  },
+  "user_config": {
+    "page_id": {
+      "type": "string",
+      "title": "Page id (optional)",
+      "description": "Leave empty if you ran the login command. Otherwise the numeric id of the Page.",
+      "required": false
+    },
+    "page_token": {
+      "type": "string",
+      "title": "Page token (optional)",
+      "description": "Leave empty if you ran the login command. Otherwise a Page access token for that Page.",
+      "sensitive": true,
+      "required": false
+    },
+    "read_only": {
+      "type": "boolean",
+      "title": "Read only",
+      "description": "Hide every tool that posts, edits, hides or deletes.",
+      "default": false,
+      "required": false
+    }
+  },
+  "compatibility": {
+    "claude_desktop": ">=0.10.0",
+    "platforms": [
+      "darwin",
+      "win32",
+      "linux"
+    ],
+    "runtimes": {
+      "node": ">=20"
+    }
+  }
+}

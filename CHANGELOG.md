@@ -1,12 +1,21 @@
-# Facebook MCP changelog
+# Facebook MCP Server & CLI changelog
 
 | Component | Version | Last Updated |
 |-----------|---------|--------------|
-| facebook-mcp | 0.1.0 | 2026-09-01 |
+| facebook-mcp-cli | 0.2.0 | 2026-09-26 |
 
-Published as [`@thenavidm/facebook-mcp`](https://www.npmjs.com/package/@thenavidm/facebook-mcp).
+Published as [`@thenavidm/facebook-mcp-cli`](https://www.npmjs.com/package/@thenavidm/facebook-mcp-cli). Version 0.1.0 was published as `@thenavidm/facebook-mcp`.
 
 ---
+
+
+## 0.2.0
+
+**A CLI.** `facebook-cli` runs every tool as a shell command. It builds the same server the MCP binary runs and calls it through the SDK's in-memory transport, so the two surfaces cannot drift. Exit codes follow the house contract: 2 usage or a refused write, 3 not found, 4 a token Meta refuses, 5 API, 7 rate limited, 10 no Page connected.
+
+**Renamed to facebook-mcp-cli**, the name every server with a CLI carries. The old package is deprecated with a pointer here, and GitHub redirects the old repo address.
+
+**A Claude Desktop extension**, attached to each release.
 
 ## 0.1.0
 

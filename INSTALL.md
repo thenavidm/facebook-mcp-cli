@@ -62,7 +62,7 @@ to derive Page tokens.
 ## 4. Exchange it for Page tokens
 
 ```bash
-npx @thenavidm/facebook-mcp login <that token>
+npx @thenavidm/facebook-mcp-cli login <that token>
 ```
 
 This writes `~/.facebook-mcp/pages.json`, mode 600, with one token per Page you
@@ -80,7 +80,7 @@ extend the user token first:
 ```bash
 export FACEBOOK_APP_ID=...
 export FACEBOOK_APP_SECRET=...
-npx @thenavidm/facebook-mcp login <that token>
+npx @thenavidm/facebook-mcp-cli login <that token>
 ```
 
 Both are on your app's **Settings**, then **Basic**.
@@ -92,7 +92,7 @@ permanent Page access.
 ## 6. Check it
 
 ```bash
-npx @thenavidm/facebook-mcp doctor
+npx @thenavidm/facebook-mcp-cli doctor
 ```
 
 It names every Page it can reach. If something is wrong, it says which link in

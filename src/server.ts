@@ -4,7 +4,7 @@ import { Graph } from "./api/client.js";
 import { Guard } from "./safety.js";
 import { registerAll } from "./tools/index.js";
 
-export const VERSION = "0.1.0";
+export const VERSION = "0.2.0";
 
 export function buildServer() {
   const cfg = loadConfig();

@@ -8,3 +8,5 @@ dist/
 .env.local
 
 .DS_Store
+desktop-extension/build/
+desktop-extension/*.mcpb

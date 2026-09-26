@@ -9,6 +9,16 @@
 
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { buildServer, VERSION } from "./server.js";
+import { isCliCommand, runCli, toolNames } from "./cli.js";
+
+/** Invoked as the CLI binary rather than the server one. */
+function invokedAsCli(): boolean {
+  const name = (process.argv[1] ?? "").split("/").pop() ?? "";
+  return name.startsWith("facebook-cli");
+}
+
+/** What the entry point answers itself, whichever binary was typed. */
+const ENTRY_COMMANDS = new Set(["help", "version", "login", "doctor"]);
 import { loadConfig } from "./config.js";
 import { login } from "./login.js";
 import { doctor } from "./doctor.js";
@@ -36,11 +46,23 @@ Environment:
   FACEBOOK_PREFERRED_PAGES      Comma separated names, deciding which Page acts by default.
   FACEBOOK_AUDIT_LOG=<path>     Append every write to this file.
 
-Docs: https://github.com/thenavidm/facebook-mcp
+Docs: https://github.com/thenavidm/facebook-mcp-cli
 `;
 
 async function main(): Promise<void> {
   const [cmd, ...rest] = process.argv.slice(2);
+  const argv = process.argv.slice(2);
+
+  // The CLI: every tool as a command, from the same server an MCP app talks
+  // to. Checked first so `<tool> --help` reaches the tool.
+  const cli =
+    cmd !== undefined && !cmd.startsWith("-") && !ENTRY_COMMANDS.has(cmd)
+      ? invokedAsCli() || isCliCommand(argv, await toolNames())
+      : invokedAsCli() && argv.length === 0;
+  if (cli) {
+    process.exitCode = await runCli(argv.length ? argv : ["tools"]);
+    return;
+  }
 
   if (cmd === "--help" || cmd === "-h" || cmd === "help") {
     process.stdout.write(HELP);
