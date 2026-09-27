@@ -342,7 +342,8 @@ function renderToolList(tools: Tool[]): string {
     const mark = risk(tool) === "read" ? " " : risk(tool) === "destructive" ? "!" : "*";
     lines.push(`  ${mark} ${commandName(tool.name).padEnd(width)}${summary(tool)}`);
   }
-  lines.push(``, `  * writes    ! irreversible, needs --confirm`, ``);
+  const gated = tools.some((t) => risk(t) === "destructive" && "confirm" in (t.inputSchema.properties ?? {}));
+  lines.push(``, `  * writes    ! irreversible${gated ? ", and asks for --confirm where the tool takes it" : ""}`, ``);
   lines.push(`  ${bin} <command> --help    what it takes`);
   lines.push(`  ${bin} schema <command>    the JSON schema an MCP client sees`, ``);
   return lines.join("\n");
@@ -441,7 +442,8 @@ export async function runCli(argv: string[]): Promise<number> {
 
     if (result.isError) {
       const message = textOf(result);
-      emitError(message);
+      // The server words a refusal for an AI. In a terminal the switch is --confirm.
+      emitError(message.replace(/\bconfirm: true\b/g, "--confirm"));
       return exitCodeFor(message);
     }
 
