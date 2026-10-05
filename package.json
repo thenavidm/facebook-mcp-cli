@@ -1,10 +1,11 @@
 {
   "name": "@thenavidm/facebook-mcp-cli",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Facebook MCP server and CLI for Claude Code, Codex and AI agents. 15 tools for posting, scheduling, drafts, Page and post insights, and comment moderation through Meta's official Graph API.",
   "bin": {
     "facebook-mcp": "dist/index.js",
-    "facebook-cli": "dist/index.js"
+    "facebook-cli": "dist/index.js",
+    "facebook-mcp-cli": "dist/npx.js"
   },
   "files": [
     "dist",
@@ -40,7 +41,7 @@
   },
   "homepage": "https://navid.me",
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "scripts": {
     "build": "tsc",
@@ -51,8 +52,7 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.18.0",
-    "zod": "^3.23.8"
+    "@thenavidm/slipway": "^0.1.24"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

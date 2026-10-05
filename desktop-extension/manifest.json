@@ -2,7 +2,7 @@
   "manifest_version": "0.2",
   "name": "facebook",
   "display_name": "Facebook",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Facebook MCP server and CLI for Claude Code, Codex and AI agents. 15 tools for posting, scheduling, drafts, Page and post insights, and comment moderation through Meta's official Graph API.",
   "long_description": "Connects Claude to your Facebook Pages through Meta's official Graph API: posting, scheduling, drafts, insights and comment moderation.\n\nFacebook only issues Page tokens through a Meta app you own. Create one once and run `npx -y @thenavidm/facebook-mcp-cli login <user-token>` in a terminal, which stores a long-lived token for every Page you administer; the extension uses it from then on. Or paste a Page id and Page token here.\n\nPages only: Facebook removed personal profile posting from the API in 2018. Deleting refuses to run without an explicit confirmation, and Read only removes every write.",
   "author": {

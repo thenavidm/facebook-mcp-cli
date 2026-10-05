@@ -6,13 +6,13 @@
  * is one thing.
  */
 
-import { z } from "zod";
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { z } from "@thenavidm/slipway";
+import type { ToolRegistrar } from "./kit.js";
 import { pickPage, type Config } from "../config.js";
 import type { Graph } from "../api/client.js";
 import { PAGE_ARG, json } from "./pages.js";
 
-export function registerInsightTools(server: McpServer, cfg: Config, graph: Graph) {
+export function registerInsightTools(server: ToolRegistrar, cfg: Config, graph: Graph) {
   server.registerTool(
     "get_page_insights",
     {

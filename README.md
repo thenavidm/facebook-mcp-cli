@@ -10,7 +10,7 @@
 
 Facebook MCP server and CLI for Claude Code, Codex and AI agents. 15 tools for posting, scheduling, drafts, Page and post insights, and comment moderation through Meta's official Graph API.
 
-One install gives you both surfaces, the same 15 tools under the same names, from the same server, so they cannot drift apart.
+One install gives you both surfaces, the same 15 tools under the same names, built from one definition of each by [Slipway](https://github.com/thenavidm/slipway), so they cannot drift apart.
 
 Setup needs a Meta developer app. There is no way around that: Facebook only issues Page tokens through an app you own. You create one once, generate a user token, and `login` exchanges it for Page tokens that never expire.
 
@@ -35,10 +35,11 @@ facebook-cli                                          # every command, one line 
 facebook-cli list-pages                               # the Pages login stored
 facebook-cli get-page --json
 facebook-cli list-posts --agent
+facebook-cli which post a photo                        # find the command for a task
 facebook-cli <command> --help                         # what any command takes
 ```
 
-`--confirm` is the shell spelling of the confirmation deleting needs. `--json` gives JSON, `--compact` puts it on one line, `--select` keeps only the fields you name, and `--agent` turns on all of it for a script. Exit codes are 0 ok, 2 usage or a refused write, 3 not found, 4 a token Meta refuses, 5 API, 7 rate limited and 10 no Page connected, so a script branches on the number.
+`--confirm` is the shell spelling of the confirmation deleting needs. `--json` gives JSON, `--compact` puts it on one line, `--select` keeps only the fields you name, and `--agent` turns on all of it for a script. Exit codes are 0 ok, 1 unexpected, 2 usage or a refused write, 3 not found, 4 a token Meta refuses, 5 API, 7 rate limited and 10 no Page connected, so a script branches on the number.
 
 `facebook-cli schema <command>` prints the exact JSON Schema an MCP client
 receives for that tool.
@@ -53,7 +54,7 @@ claude mcp add facebook -- npx -y @thenavidm/facebook-mcp-cli
 ```
 
 In Claude Desktop, the [`.mcpb` extension](https://github.com/thenavidm/facebook-mcp-cli/releases/latest)
-installs on a double click. Section 4 has every other client.
+installs on a double click. Section 5 has every other client.
 
 ### What each costs
 
@@ -62,10 +63,10 @@ difference is when the model pays for them. Measured in Claude Code:
 
 | | MCP server | CLI |
 |---|---|---|
-| Every message, with every tool loaded | 3,100 tokens | nothing |
-| Every message, Claude Code's default | 390 tokens | nothing |
+| Every message, with every tool loaded | 1,200 tokens, or 2,700 with writes on | nothing |
+| Every message, Claude Code's default | 290 tokens, or 370 with writes on | nothing |
 | When Facebook comes up | nothing more, or the tools it picks | 1,500 tokens for `SKILL.md`, once |
-| 20 messages with Facebook in 1, every tool loaded | 62,000 tokens | 1,500 tokens |
+| 20 messages with Facebook in 1, every tool loaded | 24,000 tokens | 1,500 tokens |
 
 Claude Code's [tool search](https://code.claude.com/docs/en/mcp#scale-with-mcp-tool-search)
 is on by default: it sends only the tool names and the server instructions,
@@ -78,11 +79,30 @@ To spend less, turn the server off when you are not using it, which in Claude
 Code is the `/mcp` panel.
 Or install the CLI and add the server on the days it earns its place.
 
-Measured on 2026-09-27 with Claude Code 2.1.257 on Claude Opus 5: one
-short prompt with and without the server connected, once with
-`ENABLE_TOOL_SEARCH=false` and once with the default, the difference read
-from the API's own usage figures. `SKILL.md` was measured the same way. Other
-apps and models count tokens a little differently.
+A default install lists only the seven reads, which is why it costs less than one
+with writes on. Measured on 2026-10-05 against 0.2.0, with Claude Code 2.1.286
+on Claude Opus 5.5 (one short prompt with and without the server connected,
+once with `ENABLE_TOOL_SEARCH=false` and once with the default, the difference
+read from the API's own usage figures; `SKILL.md` the same way) and Codex
+0.159.3 on gpt-6.1-sol:
+
+| Cost | 0.2.0 | 0.3.0 |
+| --- | --- | --- |
+| Claude Code, every tool loaded, every message | 3,120 | 1,176 |
+| The same, with writes and deletes on | 3,108 | 2,679 |
+| Claude Code's default, tool search, every message | 388 | 292 |
+| The same, with writes and deletes on | 374 | 374 |
+| `SKILL.md`, read once | 1,460 | 1,451 |
+| Codex over the CLI, one task, median of five | 90,223 | 71,276 |
+| Codex over MCP, the same task, median of five | 37,254 | 35,254 |
+
+The task was "find the command that reports how one post performed, and the
+flags it requires". 0.2.0 listed every tool and refused writes when called, so
+with nothing set it cost what it did with writes on. Claude Code's default
+with writes on is the mean of six runs a side, which ranged from 370 to 377
+tokens; its other figures are means of two. Other apps and models count tokens
+a little differently, and tool-list characters divided by four are not API
+usage.
 
 ## Contents
 
@@ -97,7 +117,7 @@ apps and models count tokens a little differently.
 | 7 | [Tools](#7-tools-) | All fifteen |
 | 8 | [Posting safely](#8-posting-safely-) | Three levels, three switches |
 | 9 | [Several Pages](#9-several-pages-) | Picking which one acts |
-| 10 | [Limits worth knowing](#10-limits-worth-knowing-) | What Facebook will not let you do |
+| 10 | [Limits worth knowing](#10-limits-worth-knowing-%EF%B8%8F) | What Facebook will not let you do |
 | 11 | [Troubleshooting](#11-troubleshooting-) | When something breaks |
 | 12 | [FAQ](#faq-) | Common questions |
 
@@ -471,17 +491,52 @@ different risks, so two different switches.
 
 **Reading** needs nothing.
 
-**Writing** needs `FACEBOOK_ALLOW_WRITE=true`. Posting, editing, replying and
-hiding all refuse without it, so a default install cannot publish anything.
+**Writing** needs `FACEBOOK_ALLOW_WRITE=true`. Until it is set, posting,
+editing, replying and hiding are left off the tool list and refused if called
+anyway, so a default install cannot publish anything and an agent is not
+offered tools it cannot use. `FACEBOOK_READ_ONLY=0` does the same, and
+`FACEBOOK_READ_ONLY=1` turns writes off again whatever else is set.
 
-**Deleting** needs `FACEBOOK_ALLOW_DELETE=true` as well.
+**Deleting** needs `FACEBOOK_ALLOW_DELETE=true` as well, or
+`FACEBOOK_ALLOW_DESTRUCTIVE=1`, and then each delete asks first. Over MCP a
+person approves it: Claude Code (2.1.246 and later) shows its own prompt, and
+an app that can show forms asks with an approval form whose one box starts
+unticked. Where an app can do neither, the model's `confirm: true` still
+counts, and `FACEBOOK_CONFIRM=model` makes it enough everywhere. In a terminal
+it is `--confirm`, which `--agent` never adds.
 
-**Every write can be logged.** Set `FACEBOOK_AUDIT_LOG=/path/to/file` and every
-attempt is appended, with no tool able to read or edit it.
+**Every write can be logged.** Set `FACEBOOK_AUDIT_LOG=/path/to/file` and each
+attempt is appended as one JSON line, allowed or refused, with what it was
+about to do and who approved it, then whether it was done or failed. No tool
+can read or edit it, and a Page token never goes into it.
 
 Comment text is labelled as data rather than instructions when handed to the
 model. Comments are written by strangers, and an agent that reads them and can
 also post is exposed to whatever they put there.
+
+### Settings
+
+The program reads the environment directly. It does not load `.env` files.
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `FACEBOOK_ALLOW_WRITE` | Off | `true` allows posting, editing, replying and hiding |
+| `FACEBOOK_ALLOW_DELETE` | Off | `true` allows deleting posts and comments, with writes on as well |
+| `FACEBOOK_READ_ONLY` | Read-only until writes are allowed | `0` allows writes, `1` turns them off whatever else is set |
+| `FACEBOOK_ALLOW_DESTRUCTIVE` | Off until deletes are allowed | `1` allows deleting, `0` refuses it whatever else is set |
+| `FACEBOOK_CONFIRM` | `human` | `model` lets `confirm: true` alone approve a delete over MCP, for an agent with no person to ask |
+| `FACEBOOK_AUDIT_LOG` | Empty | Append every attempted write to this file |
+| `FACEBOOK_PAGES` | Empty | Several Pages as a JSON array of `{id, access_token, name}`; `login` stores Pages instead |
+| `FACEBOOK_PAGE_ID`, `FACEBOOK_PAGE_TOKEN` | Empty | A single Page and its token |
+| `FACEBOOK_PAGE_NAME` | Empty | That Page's name, so it can be picked by name |
+| `FACEBOOK_PREFERRED_PAGES` | Empty | Comma-separated Page names, in the order that decides the default Page |
+| `FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET` | Empty | Your Meta app, so `login` stores Page tokens that do not expire |
+| `FACEBOOK_TIMEOUT_MS` | `30000` | How long to wait for the Graph API |
+| `FACEBOOK_TOOLSETS`, `FACEBOOK_SURFACE` | All, `full` | `FACEBOOK_SURFACE=search` lists three tools that find, describe and run the rest |
+| `FACEBOOK_TOOL_TIMEOUT_MS` | None | Give up on any tool after this long |
+| `FACEBOOK_HTTP_PORT`, `FACEBOOK_HTTP_HOST`, `FACEBOOK_HTTP_TOKEN` | 8787, 127.0.0.1, none | For `--http`. Any host but 127.0.0.1 needs the bearer token |
+| `FACEBOOK_HTTP_ALLOWED_ORIGINS` | None | Comma-separated browser origins allowed to call `--http`; a page from any other site is refused |
+| `FACEBOOK_DEBUG` | `0` | `1` prints debug lines on stderr |
 
 ## 9. Several Pages 📄
 
@@ -524,7 +579,7 @@ than writing, which makes it confusing.
 **"That token can see no Pages."** Missing `pages_show_list`, or you are not an
 admin of any Page.
 
-**Posting refuses.** That is the default. Set `FACEBOOK_ALLOW_WRITE=true`.
+**Posting is missing, or refuses.** That is the default: writes stay off the list until `FACEBOOK_ALLOW_WRITE=true` is set.
 
 **Anything else.** Run `doctor`. It checks each Page and reports the first
 broken link.
@@ -667,6 +722,13 @@ Navid Moazzez is a leading AI business strategist, and the host of the AI Creato
 - LinkedIn: [thenavidm](https://linkedin.com/in/thenavidm)
 
 If this is useful, star the repo and come say hi on [X](https://x.com/thenavidm).
+
+## Dependencies
+
+| Project | License | Used for |
+|---|---|---|
+| [Slipway](https://github.com/thenavidm/slipway) | Apache-2.0 | The MCP server and the CLI from one definition of each tool |
+| [MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk) | Apache-2.0 | The MCP protocol and its transports, through Slipway |
 
 ## License
 

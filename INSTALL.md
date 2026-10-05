@@ -123,4 +123,4 @@ an admin of any Page.
 **It worked yesterday and does not today.** The tokens were short-lived. Set
 `FACEBOOK_APP_ID` and `FACEBOOK_APP_SECRET` and run login again.
 
-**Posting refuses.** That is the default. Set `FACEBOOK_ALLOW_WRITE=true`.
+**Posting is missing, or refuses.** That is the default. Set `FACEBOOK_ALLOW_WRITE=true`.

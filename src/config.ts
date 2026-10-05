@@ -18,6 +18,7 @@
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
+import { VERSION } from "./version.js";
 
 export type Page = {
   id: string;
@@ -39,7 +40,6 @@ export type Config = {
   allowDestructive: boolean;
   requestTimeoutMs: number;
   userAgent: string;
-  auditPath?: string;
 };
 
 export const GRAPH_VERSION = "v21.0";
@@ -75,8 +75,29 @@ function parsePagesEnv(raw: string): Page[] {
   }
 }
 
-export function loadConfig(): Config {
-  const env = process.env;
+const TRUE = /^(1|true|yes|on)$/i;
+const FALSE = /^(0|false|no|off)$/i;
+
+/**
+ * Whether writes are off: unless FACEBOOK_ALLOW_WRITE=true, as in 0.2. Slipway's
+ * own FACEBOOK_READ_ONLY decides when it is set, the way the server reads it.
+ */
+export function writesOff(env: NodeJS.ProcessEnv): boolean {
+  const own = env.FACEBOOK_READ_ONLY?.trim() ?? "";
+  if (TRUE.test(own)) return true;
+  if (FALSE.test(own)) return false;
+  return env.FACEBOOK_ALLOW_WRITE !== "true";
+}
+
+/** Whether deleting is on: only with FACEBOOK_ALLOW_DELETE=true, as in 0.2, or Slipway's FACEBOOK_ALLOW_DESTRUCTIVE=1. */
+export function deletesOn(env: NodeJS.ProcessEnv): boolean {
+  const own = env.FACEBOOK_ALLOW_DESTRUCTIVE?.trim() ?? "";
+  if (TRUE.test(own)) return true;
+  if (FALSE.test(own)) return false;
+  return env.FACEBOOK_ALLOW_DELETE === "true";
+}
+
+export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
 
   let pages: Page[] = [];
   if (env.FACEBOOK_PAGES) pages = parsePagesEnv(env.FACEBOOK_PAGES);
@@ -99,11 +120,10 @@ export function loadConfig(): Config {
       .filter(Boolean),
     // Read-only by default. Posting to a Page is public and immediate, so it
     // should be something you switched on rather than something you inherited.
-    readOnly: env.FACEBOOK_ALLOW_WRITE !== "true",
-    allowDestructive: env.FACEBOOK_ALLOW_DELETE === "true",
+    readOnly: writesOff(env),
+    allowDestructive: deletesOn(env),
     requestTimeoutMs: Number(env.FACEBOOK_TIMEOUT_MS) || 30_000,
-    userAgent: `facebook-mcp/${env.npm_package_version ?? "0.1.0"}`,
-    auditPath: env.FACEBOOK_AUDIT_LOG,
+    userAgent: `facebook-mcp/${VERSION}`,
   };
 }
 

@@ -26,14 +26,17 @@ telemetry.
 
 ## Write safety
 
-Writes work by default, because posting is the point of the server.
+Nothing writes until `FACEBOOK_ALLOW_WRITE=true` is set: until then every write
+tool is left off the list and refused if called anyway, so a model cannot see or
+use them. `FACEBOOK_READ_ONLY=1` turns writes off again whatever else is set.
 
-**`confirm: true`** on publishing and deleting, which are public the moment they
-run and cannot be undone from a chat window. Hiding a reply is not guarded,
-because it is one click to undo.
+**Deleting** needs `FACEBOOK_ALLOW_DELETE=true` as well, and each delete needs
+confirming: a person approves it over MCP wherever the app can ask, and
+`--confirm` in a terminal. Posting, editing and hiding a reply are writes behind
+`FACEBOOK_ALLOW_WRITE`, and hiding is one click to undo.
 
-**`FACEBOOK_READ_ONLY=1`** removes every write tool from the list. The tools are
-never registered, so a model cannot see or call them.
+**`FACEBOOK_AUDIT_LOG`** records every attempted write as one JSON line, with who
+approved it. A Page token never goes into it.
 
 ## Untrusted content
 
@@ -44,8 +47,10 @@ can post.
 
 ## Running it over HTTP
 
-The HTTP transport has no authentication of its own and belongs behind TLS and an
-authenticating proxy. It holds a live credential for your account.
+`--http` binds 127.0.0.1 and refuses to listen anywhere else without
+`FACEBOOK_HTTP_TOKEN`, a bearer token every request must carry, and refuses a
+page from another site unless `FACEBOOK_HTTP_ALLOWED_ORIGINS` lists it. Beyond
+this machine it belongs behind TLS. It holds a live credential for your Pages.
 
 ## Good-faith research
 

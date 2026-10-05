@@ -6,11 +6,10 @@
  * `scheduled_publish_time` it is scheduled. Both are the same endpoint.
  */
 
-import { z } from "zod";
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { z } from "@thenavidm/slipway";
+import type { ToolRegistrar } from "./kit.js";
 import { pickPage, type Config } from "../config.js";
 import type { Graph } from "../api/client.js";
-import type { Guard } from "../safety.js";
 import { PAGE_ARG, json } from "./pages.js";
 
 /** Graph wants unix seconds; people write dates. Accept both. */
@@ -29,10 +28,9 @@ function toUnix(when: string): number {
 }
 
 export function registerPostTools(
-  server: McpServer,
+  server: ToolRegistrar,
   cfg: Config,
   graph: Graph,
-  guard: Guard,
 ) {
   server.registerTool(
     "create_post",
@@ -53,7 +51,6 @@ export function registerPostTools(
       annotations: { destructiveHint: false, openWorldHint: true },
     },
     async ({ message, link, publish_at, draft, page }) => {
-      guard.requireWrite("Posting");
       const p = pickPage(cfg, page);
 
       const query: Record<string, string | number | boolean> = { message };
@@ -66,7 +63,6 @@ export function registerPostTools(
       }
 
       const res = await graph.post(p, `${p.id}/feed`, query);
-      guard.audit("create_post", p.id, message);
       return json({ ...res, page: p.name || p.id, scheduled: Boolean(publish_at), draft: Boolean(draft) });
     },
   );
@@ -87,7 +83,6 @@ export function registerPostTools(
       annotations: { destructiveHint: false, openWorldHint: true },
     },
     async ({ url, caption, publish_at, draft, page }) => {
-      guard.requireWrite("Posting");
       const p = pickPage(cfg, page);
 
       const query: Record<string, string | number | boolean> = { url };
@@ -100,7 +95,6 @@ export function registerPostTools(
       }
 
       const res = await graph.post(p, `${p.id}/photos`, query);
-      guard.audit("create_photo_post", p.id, caption ?? url);
       return json({ ...res, page: p.name || p.id });
     },
   );
@@ -165,10 +159,8 @@ export function registerPostTools(
       annotations: { destructiveHint: false, openWorldHint: true },
     },
     async ({ post_id, page }) => {
-      guard.requireWrite("Publishing");
       const p = pickPage(cfg, page);
       const res = await graph.post(p, post_id, { is_published: true });
-      guard.audit("publish_draft", p.id, post_id);
       return json(res);
     },
   );
@@ -186,10 +178,8 @@ export function registerPostTools(
       annotations: { destructiveHint: false, openWorldHint: true },
     },
     async ({ post_id, message, page }) => {
-      guard.requireWrite("Editing");
       const p = pickPage(cfg, page);
       const res = await graph.post(p, post_id, { message });
-      guard.audit("update_post", p.id, post_id);
       return json(res);
     },
   );
@@ -204,10 +194,8 @@ export function registerPostTools(
       annotations: { destructiveHint: true, openWorldHint: true },
     },
     async ({ post_id, page }) => {
-      guard.requireDestructive("Deleting a post");
       const p = pickPage(cfg, page);
       const res = await graph.delete(p, post_id);
-      guard.audit("delete_post", p.id, post_id);
       return json(res);
     },
   );

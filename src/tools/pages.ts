@@ -1,10 +1,9 @@
 /** Which Pages are connected, and what they look like. */
 
-import { z } from "zod";
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { z } from "@thenavidm/slipway";
+import type { ToolRegistrar } from "./kit.js";
 import { pickPage, type Config } from "../config.js";
 import type { Graph } from "../api/client.js";
-import type { Guard } from "../safety.js";
 
 export const PAGE_ARG = z
   .string()
@@ -16,10 +15,9 @@ export const json = (data: unknown) => ({
 });
 
 export function registerPageTools(
-  server: McpServer,
+  server: ToolRegistrar,
   cfg: Config,
   graph: Graph,
-  guard: Guard,
 ) {
   server.registerTool(
     "list_pages",
@@ -34,7 +32,7 @@ export function registerPageTools(
       json({
         pages: cfg.pages.map((p) => ({ id: p.id, name: p.name })),
         default: pickPage(cfg).name || pickPage(cfg).id,
-        read_only: guard.readOnly,
+        read_only: cfg.readOnly,
       }),
   );
 
