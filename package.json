@@ -1,7 +1,7 @@
 {
   "name": "@thenavidm/facebook-mcp-cli",
-  "version": "0.3.0",
-  "description": "Facebook MCP server and CLI for Claude Code, Codex and AI agents. 15 tools for posting, scheduling, drafts, Page and post insights, and comment moderation through Meta's official Graph API.",
+  "version": "0.4.0",
+  "description": "Facebook MCP server and CLI for Claude Code, Codex and AI agents. 18 tools for posting, Reels from a file on your machine, scheduling, drafts, Page and post insights, and comment moderation through Meta's official Graph API.",
   "bin": {
     "facebook-mcp": "dist/index.js",
     "facebook-cli": "dist/index.js",
@@ -22,6 +22,9 @@
     "model-context-protocol",
     "facebook",
     "facebook-pages",
+    "facebook-reels",
+    "reels",
+    "video-upload",
     "facebook-api",
     "graph-api",
     "meta",

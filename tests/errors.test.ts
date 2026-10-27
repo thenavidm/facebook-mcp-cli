@@ -17,6 +17,12 @@ describe("explain", () => {
     expect(e.message).toContain("Your photo could not be posted.");
   });
 
+  it("says which Reel rule a rejected video broke, as code or subcode", () => {
+    expect(explain(400, { message: "bad duration", code: 100, error_subcode: 1363128 }, "").message).toMatch(/3 to 90 seconds/);
+    expect(explain(400, { message: "bad ratio", code: 1363040 }, "").message).toMatch(/9x16/);
+    expect(explain(400, { message: "too small", code: 100, error_subcode: 1363127 }, "").message).toMatch(/540x960/);
+  });
+
   it("falls back to the raw body when there is no structured error", () => {
     const e = explain(500, undefined, "upstream exploded");
     expect(e.message).toContain("upstream exploded");

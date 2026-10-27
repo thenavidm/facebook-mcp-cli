@@ -8,17 +8,17 @@
 [![X](https://img.shields.io/badge/X-@thenavidm-black?logo=x)](https://x.com/thenavidm)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-thenavidm-0A66C2?logo=linkedin&logoColor=white)](https://linkedin.com/in/thenavidm)
 
-Facebook MCP server and CLI for Claude Code, Codex and AI agents. 15 tools for posting, scheduling, drafts, Page and post insights, and comment moderation through Meta's official Graph API.
+Facebook MCP server and CLI for Claude Code, Codex and AI agents. 18 tools for posting, Reels from a file on your machine, scheduling, drafts, Page and post insights, and comment moderation through Meta's official Graph API.
 
-One install gives you both surfaces, the same 15 tools under the same names, built from one definition of each by [Slipway](https://github.com/thenavidm/slipway), so they cannot drift apart.
+One install gives you both surfaces, the same 18 tools under the same names, built from one definition of each by [Slipway](https://github.com/thenavidm/slipway), so they cannot drift apart.
 
 Setup needs a Meta developer app. There is no way around that: Facebook only issues Page tokens through an app you own. You create one once, generate a user token, and `login` exchanges it for Page tokens that never expire.
 
 Pages only. Facebook removed personal profile posting from the API in 2018 and never replaced it, so no tool can do it, including this one.
 
-Scheduling is real. Facebook holds the post and publishes it itself, so nothing has to be running on your machine at the time.
+Scheduling is real. Facebook holds the post, or the Reel, and publishes it itself, so nothing has to be running on your machine at the time.
 
-15 tools, across as many Pages as you administer.
+18 tools, across as many Pages as you administer.
 
 <img src="https://cdn.navid.media/repos/facebook-mcp.gif?v=1" alt="Claude Code using the Facebook MCP server" width="520">
 
@@ -36,10 +36,12 @@ facebook-cli list-pages                               # the Pages login stored
 facebook-cli get-page --json
 facebook-cli list-posts --agent
 facebook-cli which post a photo                        # find the command for a task
+facebook-cli create-reel --file ~/Movies/launch.mp4 \
+  --caption "It's live" --publish-at 2026-11-02T15:00:00Z --confirm
 facebook-cli <command> --help                         # what any command takes
 ```
 
-`--confirm` is the shell spelling of the confirmation deleting needs. `--json` gives JSON, `--compact` puts it on one line, `--select` keeps only the fields you name, and `--agent` turns on all of it for a script. Exit codes are 0 ok, 1 unexpected, 2 usage or a refused write, 3 not found, 4 a token Meta refuses, 5 API, 7 rate limited and 10 no Page connected, so a script branches on the number.
+`--confirm` is the shell spelling of the confirmation deleting and posting a Reel need. `--json` gives JSON, `--compact` puts it on one line, `--select` keeps only the fields you name, and `--agent` turns on all of it for a script. Exit codes are 0 ok, 1 unexpected, 2 usage or a refused write, 3 not found, 4 a token Meta refuses, 5 API, 7 rate limited and 10 no Page connected, so a script branches on the number.
 
 `facebook-cli schema <command>` prints the exact JSON Schema an MCP client
 receives for that tool.
@@ -58,7 +60,7 @@ installs on a double click. Section 5 has every other client.
 
 ### What each costs
 
-Both surfaces are the same program with the same 15 tools. The
+Both surfaces are the same program with the same 18 tools. The
 difference is when the model pays for them. Measured in Claude Code:
 
 | | MCP server | CLI |
@@ -79,8 +81,10 @@ To spend less, turn the server off when you are not using it, which in Claude
 Code is the `/mcp` panel.
 Or install the CLI and add the server on the days it earns its place.
 
-A default install lists only the seven reads, which is why it costs less than one
-with writes on. Measured on 2026-10-05 against 0.2.0, with Claude Code 2.1.286
+A default install lists only the reads, which is why it costs less than one
+with writes on. The figures here are 0.3.0's, with 15 tools and seven reads;
+0.4.0 adds three tools (nine are listed with writes off) and has not been
+measured yet. Measured on 2026-10-05 against 0.2.0, with Claude Code 2.1.286
 on Claude Opus 5.5 (one short prompt with and without the server connected,
 once with `ENABLE_TOOL_SEARCH=false` and once with the default, the difference
 read from the API's own usage figures; `SKILL.md` the same way) and Codex
@@ -114,7 +118,7 @@ usage.
 | 4 | [Get your token](#4-get-your-token-) | And make it permanent |
 | 5 | [Connect your client](#5-connect-your-client-) | Every client, copy and paste |
 | 6 | [Check it worked](#6-check-it-worked-) | One command that says what is broken |
-| 7 | [Tools](#7-tools-) | All fifteen |
+| 7 | [Tools](#7-tools-) | All eighteen |
 | 8 | [Posting safely](#8-posting-safely-) | Three levels, three switches |
 | 9 | [Several Pages](#9-several-pages-) | Picking which one acts |
 | 10 | [Limits worth knowing](#10-limits-worth-knowing-%EF%B8%8F) | What Facebook will not let you do |
@@ -124,6 +128,7 @@ usage.
 ## 1. What you can ask it 💬
 
 - Schedule this for Tuesday at 9am, and draft two alternatives I can pick from.
+- Post ~/Movies/launch.mp4 as a Reel on Friday at 6pm with this caption.
 - Which post this month got the most reach, and what was different about it?
 - Compare last week to the week before. Did the change in posting time help?
 - Read the comments on the last five posts and tell me what people keep asking.
@@ -430,11 +435,12 @@ it says which link in the chain broke, because Meta's own error rarely does.
 
 ## 7. Tools 🧰
 
-Fifteen. Each declares whether it reads or writes, so your client can show you
+Eighteen. Each declares whether it reads or writes, so your client can show you
 before anything runs.
 
-Scheduling is native: Facebook holds a scheduled post and publishes it itself,
-so nothing has to run on your machine at the time. Drafts are real drafts too.
+Scheduling is native: Facebook holds a scheduled post or Reel and publishes it
+itself, so nothing has to run on your machine at the time. Drafts are real
+drafts too.
 
 ### Your Pages
 
@@ -454,6 +460,14 @@ so nothing has to run on your machine at the time. Drafts are real drafts too.
 | `delete_post` | delete | Cannot be undone |
 | `list_posts` | read | Published posts with reaction, comment and share counts |
 | `list_scheduled_posts` | read | Scheduled and draft posts not yet out |
+
+### Reels
+
+| Tool | | |
+|---|---|---|
+| `create_reel` | write, confirmed | A Reel from a video file on this machine or a public URL: now, scheduled, or a draft |
+| `create_reel_status` | read | The upload job `create_reel` started, when it outlasted the call |
+| `get_reel_status` | read | Facebook's own status: processing, published, scheduled with its time, or the error |
 
 ### Comments
 
@@ -484,6 +498,51 @@ so nothing has to run on your machine at the time. Drafts are real drafts too.
 Facebook requires 10 minutes to 6 months ahead. Its own error for breaking that
 says nothing useful, so this checks first and tells you which rule you hit.
 
+### Reels from a file
+
+`create_reel` takes `file`, a path on this machine, or `url`, a public video
+Facebook fetches itself. The same three intents as a post:
+
+| Intent | Arguments |
+|---|---|
+| Post now | `file` or `url`, `caption` |
+| Save a draft | the same, `draft: true` |
+| Schedule | the same, `publish_at` as an ISO timestamp |
+
+A file goes up with Facebook's own upload, in the three phases the
+[Reels publishing guide](https://developers.facebook.com/docs/video-api/guides/reels-publishing)
+describes: start a session on the Page, send the bytes to
+`rupload.facebook.com`, then finish with the caption and the state. If the
+connection breaks partway, it asks Facebook how many bytes arrived and resumes
+from there, up to three times. The file is streamed from disk, never read into
+memory.
+
+A large file takes longer than an app waits for one call, so the upload runs as
+a job. The call waits 25 seconds by default, `wait_seconds` up to 55; if the
+upload is still going, it returns a `job_id` to check with `create_reel_status`.
+In a terminal the command waits to the end. Once Facebook has the video, it
+processes it on its own time: `get_reel_status` says whether it is published,
+scheduled and for when, or what stopped it.
+
+What Facebook asks of a Reel, from the
+[Reels publishing guide](https://developers.facebook.com/docs/video-api/guides/reels-publishing):
+
+| Rule | Facebook's limit |
+|---|---|
+| Shape | 9:16. 1080x1920 recommended, 540x960 minimum |
+| Length | 3 to 90 seconds |
+| Frame rate | 24 to 60 frames per second |
+| File | .mp4 recommended |
+| Schedule | More than 10 minutes and within 29 days from now, with `video_state=SCHEDULED` |
+| Volume | 30 API-published Reels per Page in a 24-hour moving period |
+| Where | Pages only |
+| Hosted URL | Not on Facebook's own CDN (fbcdn), and reachable by Facebook's crawler |
+
+The scheduling window, the file and the URL are checked before Facebook is
+asked anything, so a typo costs no upload session and none of the 30. Shape,
+length and frame rate are checked by Facebook, and a rejection names the rule
+it broke.
+
 ## 8. Posting safely 🔒
 
 A Page post is public the moment it lands. Deleting one cannot be undone. Two
@@ -496,6 +555,11 @@ editing, replying and hiding are left off the tool list and refused if called
 anyway, so a default install cannot publish anything and an agent is not
 offered tools it cannot use. `FACEBOOK_READ_ONLY=0` does the same, and
 `FACEBOOK_READ_ONLY=1` turns writes off again whatever else is set.
+
+**Posting a Reel asks first**, with writes on: publishing has implicit public
+scope, in Facebook's words, and each one counts toward the 30 API-published
+Reels a Page gets in 24 hours. It is approved the same way as a delete, below,
+without needing the delete switch.
 
 **Deleting** needs `FACEBOOK_ALLOW_DELETE=true` as well, or
 `FACEBOOK_ALLOW_DESTRUCTIVE=1`, and then each delete asks first. Over MCP a
@@ -524,7 +588,7 @@ The program reads the environment directly. It does not load `.env` files.
 | `FACEBOOK_ALLOW_DELETE` | Off | `true` allows deleting posts and comments, with writes on as well |
 | `FACEBOOK_READ_ONLY` | Read-only until writes are allowed | `0` allows writes, `1` turns them off whatever else is set |
 | `FACEBOOK_ALLOW_DESTRUCTIVE` | Off until deletes are allowed | `1` allows deleting, `0` refuses it whatever else is set |
-| `FACEBOOK_CONFIRM` | `human` | `model` lets `confirm: true` alone approve a delete over MCP, for an agent with no person to ask |
+| `FACEBOOK_CONFIRM` | `human` | `model` lets `confirm: true` alone approve a delete or a Reel over MCP, for an agent with no person to ask |
 | `FACEBOOK_AUDIT_LOG` | Empty | Append every attempted write to this file |
 | `FACEBOOK_PAGES` | Empty | Several Pages as a JSON array of `{id, access_token, name}`; `login` stores Pages instead |
 | `FACEBOOK_PAGE_ID`, `FACEBOOK_PAGE_TOKEN` | Empty | A single Page and its token |
@@ -567,6 +631,10 @@ retrying a post risks publishing twice.
 **Edits are visible.** Facebook shows viewers an edit history on any post you
 change.
 
+**Reels: 30 a day, 29 days ahead.** Facebook allows 30 API-published Reels per
+Page in a 24-hour moving period, and schedules one at most 29 days out where a
+post can go 6 months.
+
 ## 11. Troubleshooting 🔧
 
 **"The Page token is invalid or expired."** The token was short-lived. Set
@@ -580,6 +648,11 @@ than writing, which makes it confusing.
 admin of any Page.
 
 **Posting is missing, or refuses.** That is the default: writes stay off the list until `FACEBOOK_ALLOW_WRITE=true` is set.
+
+**A Reel is stuck or failed.** Run `get_reel_status` with its `video_id`. An
+error there is Facebook's own, often the resolution (540x960 minimum), the
+length (3 to 90 seconds) or the aspect ratio. `expired` means the upload has to
+start again.
 
 **Anything else.** Run `doctor`. It checks each Page and reports the first
 broken link.
@@ -694,6 +767,15 @@ about an hour, which is the most common reason this stops working.
 It cannot post at all unless you set `FACEBOOK_ALLOW_WRITE=true`. With that on
 it can, so set `FACEBOOK_AUDIT_LOG` and every attempt is written to a file no
 tool can edit.
+
+</details>
+
+<details>
+<summary><b>Can it post a Reel from a file on my computer?</b></summary>
+
+Yes. `create_reel --file` uploads it with Facebook's resumable upload and
+publishes, schedules or saves it as a draft. Facebook schedules it itself, so
+your computer can be off at the time. Pages only, 9:16, 3 to 90 seconds.
 
 </details>
 

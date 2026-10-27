@@ -2,15 +2,33 @@
 
 | Component | Version | Last Updated |
 |-----------|---------|--------------|
-| facebook-mcp-cli | 0.3.0 | 2026-10-05 |
+| facebook-mcp-cli | 0.4.0 | 2026-10-27 |
 | `@thenavidm/slipway` | 0.1.24 | 2026-10-05 |
-| Graph API | v21.0 | 2026-10-05 |
+| Graph API | v21.0, available until January 21, 2027 | 2026-10-27 |
 | Node | >= 22 | 2026-10-05 |
 
 Published as [`@thenavidm/facebook-mcp-cli`](https://www.npmjs.com/package/@thenavidm/facebook-mcp-cli). Version 0.1.0 was published as `@thenavidm/facebook-mcp`.
 
 ---
 
+
+## 0.4.0, 2026-10-27
+
+Reels from a file on your machine, with Facebook's own scheduling. 18 tools, from 15. Every Facebook rule below is from Meta's [Reels publishing guide](https://developers.facebook.com/docs/video-api/guides/reels-publishing), read on 2026-10-27.
+
+- **`create_reel` posts a Reel to a Page** from `file`, a video on this machine, or `url`, a public video Facebook fetches itself, with a `caption`. Like `create_post` it publishes now, keeps a draft with `draft: true`, or schedules with `publish_at`, which goes to Facebook as `video_state=SCHEDULED` and `scheduled_publish_time`, so Facebook publishes it and nothing here has to be running.
+- **Facebook's resumable upload.** A file goes up in the guide's three phases: a session opened on `/{page-id}/video_reels`, the bytes to `rupload.facebook.com` with `Authorization: OAuth`, `offset` and `file_size` headers, then `upload_phase=finish` with the caption and the state. A broken upload asks Facebook how many bytes arrived (`bytes_transfered`, in Meta's spelling) and resumes from there, up to three times. The file is streamed from disk, not read into memory. A hosted video goes to the same address as a `file_url` header.
+- **Checked before Facebook is asked.** The schedule must be more than 10 minutes and within 29 days out, where a post may go 6 months; the file must exist and not be empty; a URL must be http or https and not on Facebook's own CDN, which the guide says it rejects. A typo costs no upload session and none of the Page's 30 API-published Reels in 24 hours. Shape, length and frame rate are Facebook's to check, and its errors 1363040, 1363127, 1363128 and 1363129 now say which rule broke: 9:16, 540x960 minimum, 3 to 90 seconds, 24 to 60 fps.
+- **A person approves each Reel.** `create_reel` needs confirming with writes on, as deletes do, because publishing has implicit public scope and counts toward the Page's 30 a day; the refusal says so in those words and names the file and caption. It does not need `FACEBOOK_ALLOW_DELETE`. Other posts stay unconfirmed writes, as in 0.3.0.
+- **The upload is a background job.** A 90-second 1080p Reel is often over 100 MB, longer than an app waits for one call. Over MCP the call waits `wait_seconds` (25 by default, at most 55) and, if the file is still going up, returns a `job_id` for `create_reel_status`, which Slipway generates. In a terminal the command waits to the end and reports progress on stderr.
+- **`get_reel_status`** reads Facebook's own status for a Reel and says in one word where it is: `processing`, `published`, `scheduled` with its `publish_time`, `draft`, `expired`, or `error` with Facebook's reason.
+- **Docs.** The README's Tools section covers Reels, their limits and the job, section 8 says a Reel asks first, and `SKILL.md` tells an agent never to call `create_reel` twice for one request. `AGENTS.md` notes that Graph API v21.0, which this server pins, expires on January 21, 2027 ([Meta's version table](https://developers.facebook.com/docs/graph-api/changelog/versions)).
+
+Not measured yet: the context cost of the three new tools and the Codex task. The README's figures are 0.3.0's and say so. Not checked against a real Page yet: the upload, the scheduling and the status, which the tests drive against a stubbed Facebook built from the guide's examples.
+
+### Upgrading
+
+Nothing changes for the 15 tools from 0.3.0. With writes off, the list has nine tools where it had seven: `get_reel_status` and `create_reel_status` only read. A headless agent that should post a Reel with `confirm: true` alone needs `FACEBOOK_CONFIRM=model`, as for deletes.
 
 ## 0.3.0, 2026-10-05
 

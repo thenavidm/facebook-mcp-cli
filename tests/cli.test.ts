@@ -25,12 +25,13 @@ const writes = { FACEBOOK_ALLOW_WRITE: "true" };
 const deletes = { FACEBOOK_ALLOW_WRITE: "true", FACEBOOK_ALLOW_DELETE: "true" };
 
 describe("Facebook on Slipway", () => {
-  it("makes all 15 tools commands, the two deletes needing confirmation", async () => {
+  it("makes all 18 tools commands, the two deletes and posting a Reel needing confirmation", async () => {
     const context = JSON.parse((await cli(app, ["agent-context", "--brief"], { env: deletes })).stdout);
     const commands = context.commands as Array<{ command: string; requires_confirm?: boolean }>;
-    expect(commands.map((c) => c.command).sort()).toEqual(TOOLS.map((tool) => tool.name.replace(/_/g, "-")).sort());
-    expect(commands).toHaveLength(15);
-    expect(commands.filter((c) => c.requires_confirm).map((c) => c.command).sort()).toEqual(["delete-comment", "delete-post"]);
+    // Slipway adds create-reel-status for the upload job, on top of the tools defined here.
+    expect(commands.map((c) => c.command).sort()).toEqual([...TOOLS.map((tool) => tool.name.replace(/_/g, "-")), "create-reel-status"].sort());
+    expect(commands).toHaveLength(18);
+    expect(commands.filter((c) => c.requires_confirm).map((c) => c.command).sort()).toEqual(["create-reel", "delete-comment", "delete-post"]);
   });
 
   it("lists only the reads until FACEBOOK_ALLOW_WRITE=true, as 0.2 refused everything else", async () => {
@@ -41,12 +42,14 @@ describe("Facebook on Slipway", () => {
       return names;
     };
     expect(await listed({})).toEqual(
-      expect.arrayContaining(["list_pages", "get_page", "list_posts", "list_scheduled_posts", "list_comments", "get_page_insights", "get_post_insights"]),
+      expect.arrayContaining(["list_pages", "get_page", "list_posts", "list_scheduled_posts", "get_reel_status", "list_comments", "get_page_insights", "get_post_insights"]),
     );
-    expect(await listed({})).toHaveLength(7);
-    expect(await listed(writes)).toHaveLength(15);
+    // The 8 reads, and the status tool of the Reel upload job, which only reads.
+    expect(await listed({})).toHaveLength(9);
+    expect(await listed({})).not.toContain("create_reel");
+    expect(await listed(writes)).toHaveLength(18);
     // Slipway's own switch says the same thing.
-    expect(await listed({ FACEBOOK_READ_ONLY: "0" })).toHaveLength(15);
+    expect(await listed({ FACEBOOK_READ_ONLY: "0" })).toHaveLength(18);
     const refused = await cli(app, ["create-post", "--message", "hi", "--agent"], { env: {} });
     expect(refused.code).toBe(2);
     expect(JSON.parse(refused.stderr).hint).toBe("Set FACEBOOK_READ_ONLY=0 to allow writes.");
@@ -87,6 +90,7 @@ describe("Facebook on Slipway", () => {
     const first = async (...words: string[]) => (await cli(app, ["which", ...words], { env: deletes })).stdout.split("\n")[0];
     expect(await first("post", "a", "photo")).toContain("create-photo-post");
     expect(await first("hide", "a", "comment")).toContain("hide-comment");
+    expect(await first("post", "a", "reel")).toContain("create-reel");
   });
 
   it("passes slipway check", async () => {

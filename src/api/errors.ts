@@ -44,7 +44,17 @@ export function explain(status: number, err: MetaError | undefined, body: string
     613: "Calls to this endpoint have exceeded the rate limit.",
   };
 
-  const extra = code && guidance[code] ? ` ${guidance[code]}` : "";
+  // A Reel that breaks Facebook's video rules, from the Reels guide's error
+  // table. Meta lists them as error codes; they may arrive as the subcode.
+  const reels: Record<number, string> = {
+    1363040: "A Reel's aspect ratio must be between 16x9 and 9x16; 9x16 is the Reel shape.",
+    1363127: "A Reel needs at least 540x960 pixels; 1080x1920 is recommended.",
+    1363128: "A Reel must be 3 to 90 seconds long.",
+    1363129: "A Reel's frame rate must be 24 to 60 frames per second.",
+  };
+
+  const hint = (sub && reels[sub]) || (code && reels[code]) || (code && guidance[code]);
+  const extra = hint ? ` ${hint}` : "";
   return new GraphError(`Facebook API ${status}: ${raw}${extra}`, status, code, sub);
 }
 

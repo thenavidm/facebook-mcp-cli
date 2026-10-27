@@ -12,18 +12,21 @@ import { pickPage, type Config } from "../config.js";
 import type { Graph } from "../api/client.js";
 import { PAGE_ARG, json } from "./pages.js";
 
+/** How far ahead Facebook schedules a Page post: 6 months. A Reel has its own, shorter window. */
+const POST_WINDOW = { maxSeconds: 60 * 60 * 24 * 30 * 6, tooFar: "Facebook will not schedule more than 6 months ahead." };
+
 /** Graph wants unix seconds; people write dates. Accept both. */
-function toUnix(when: string): number {
+export function toUnix(when: string, window: { maxSeconds: number; tooFar: string } = POST_WINDOW): number {
   const t = Date.parse(when);
   if (Number.isNaN(t)) {
     throw new Error(`Could not read "${when}" as a date. Use an ISO timestamp like 2026-09-01T14:30:00Z.`);
   }
   const seconds = Math.floor(t / 1000);
   const now = Math.floor(Date.now() / 1000);
-  // Facebook rejects anything under 10 minutes or over 6 months out, with a
+  // Facebook rejects anything under 10 minutes or past its window, with a
   // message that does not say so.
   if (seconds < now + 600) throw new Error("Scheduled posts must be at least 10 minutes in the future.");
-  if (seconds > now + 60 * 60 * 24 * 30 * 6) throw new Error("Facebook will not schedule more than 6 months ahead.");
+  if (seconds > now + window.maxSeconds) throw new Error(window.tooFar);
   return seconds;
 }
 

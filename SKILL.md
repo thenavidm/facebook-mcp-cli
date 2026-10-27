@@ -1,6 +1,6 @@
 ---
 name: facebook-mcp
-description: Post to Facebook Pages, schedule and draft, read insights, and moderate comments through Meta's official Graph API. Use when someone wants to publish to Facebook, check how a Page or post performed, or handle comments.
+description: Post to Facebook Pages, post Reels from a local video file, schedule and draft, read insights, and moderate comments through Meta's official Graph API. Use when someone wants to publish or schedule a post or Reel on Facebook, check how a Page or post performed, or handle comments.
 argument-hint: <command> [args] | install cli|mcp
 allowed-tools: Read, Bash
 metadata:
@@ -14,8 +14,8 @@ metadata:
 
 # Facebook MCP
 
-Fifteen tools over Meta's Graph API. Pages only: Facebook removed profile
-posting in 2018.
+Eighteen tools over Meta's Graph API, run as `facebook-cli`. Pages only:
+Facebook removed profile posting in 2018.
 
 
 ## Before you run anything
@@ -93,6 +93,32 @@ Scheduled times must be 10 minutes to 6 months out. Read the wording back to
 the user before publishing: a post is public at once, and an edit leaves a
 visible history.
 
+## Reels
+
+`create_reel` posts a Reel from `file`, a path on this machine (pass it
+absolute: the MCP server's working directory is not the user's), or `url`, a
+public video. Same intents as a post: now, `draft: true`, or `publish_at`.
+It needs confirming: publishing has implicit public scope and counts toward
+the Page's 30 API-published Reels in 24 hours.
+
+```bash
+facebook-cli create-reel --file /abs/path/reel.mp4 --caption "..." \
+  --publish-at 2026-11-02T15:00:00Z --confirm --agent
+facebook-cli get-reel-status --video-id <video_id> --agent
+```
+
+- Facebook's rules: 9:16, 1080x1920 recommended and 540x960 minimum, 3 to 90
+  seconds, 24 to 60 fps. A schedule must be more than 10 minutes and within 29
+  days out; the tool refuses anything else before uploading.
+- The upload is a job. Over MCP a call returns after `wait_seconds` (25 by
+  default, 55 at most) with `done: false` and a `job_id` if the file is still
+  going up: call `create_reel_status` with it. The CLI waits to the end.
+- `done: true` means Facebook has the file, not that the Reel is out. Facebook
+  processes it afterwards; `get_reel_status` reports `processing`, `published`,
+  `scheduled` with `publish_time`, `draft`, or `error` with Facebook's reason.
+- Never call `create_reel` twice for one request: a second call is a second
+  Reel and a second of the 30.
+
 ## Moderating
 
 Prefer `hide_comment` to `delete_comment`. Hiding is reversible and only the
@@ -109,7 +135,8 @@ it is.
 ## When something refuses
 
 Writes stay off the tool list until `FACEBOOK_ALLOW_WRITE=true`. Deletes also
-need `FACEBOOK_ALLOW_DELETE=true`, then confirming. If a tool is missing or
+need `FACEBOOK_ALLOW_DELETE=true`, then confirming. `create_reel` needs
+confirming too, with writes on. If a tool is missing or
 refuses, name the variable rather than retrying.
 
 ## Untrusted content
